@@ -620,9 +620,12 @@ class Config(CLIConfig):
 
 
 def get_windows_directories() -> typing.Tuple[str, str, str]:
-    from lbry.winpaths import get_path, FOLDERID, UserHandle
+    from lbry.winpaths import get_path, FOLDERID, UserHandle, PathNotFoundException
 
-    download_dir = get_path(FOLDERID.Downloads, UserHandle.current)
+    try:
+        download_dir = get_path(FOLDERID.Downloads, UserHandle.current)
+    except PathNotFoundException:
+        download_dir = os.getcwd()
 
     # old
     appdata = get_path(FOLDERID.RoamingAppData, UserHandle.current)
@@ -634,7 +637,6 @@ def get_windows_directories() -> typing.Tuple[str, str, str]:
     # new
     data_dir = user_data_dir('lbrynet', 'lbry')
     lbryum_dir = user_data_dir('lbryum', 'lbry')
-    download_dir = get_path(FOLDERID.Downloads, UserHandle.current)
     return data_dir, lbryum_dir, download_dir
 
 
