@@ -48,7 +48,7 @@ SEARCH_PARAMS = {
     'name', 'claim_id', 'txid', 'nout', 'channel', 'channel_ids', 'not_channel_ids',
     'public_key_id', 'claim_type', 'stream_types', 'media_types', 'fee_currency',
     'has_channel_signature', 'signature_valid',
-    'any_tags', 'all_tags', 'not_tags',
+    'any_tags', 'all_tags', 'not_tags', 'reposted_claim_id',
     'any_locations', 'all_locations', 'not_locations',
     'any_languages', 'all_languages', 'not_languages',
     'is_controlling', 'limit', 'offset', 'order_by',
@@ -227,6 +227,9 @@ def _get_claims(cols, for_count=False, **constraints) -> Tuple[str, Dict]:
         else:
             constraints['claim.claim_id__like'] = f'{claim_id[:40]}%'
 
+    if 'reposted_claim_id' in constraints:
+        constraints['claim.reposted_claim_hash'] = sqlite3.Binary(unhexlify(constraints.pop('reposted_claim_id'))[::-1])
+
     if 'name' in constraints:
         constraints['claim.normalized'] = normalize_name(constraints.pop('name'))
 
@@ -358,7 +361,7 @@ def _search(**constraints):
         claim.effective_amount, claim.support_amount,
         claim.trending_group, claim.trending_mixed,
         claim.trending_local, claim.trending_global,
-        claim.short_url, claim.canonical_url,
+        claim.short_url, claim.canonical_url, claim.reposted_claim_hash,
         claim.channel_hash, channel.txo_hash AS channel_txo_hash,
         channel.height AS channel_height, claim.signature_valid
         """, **constraints
