@@ -12,10 +12,12 @@ from docopt import docopt
 import aiohttp
 from aiohttp.web import GracefulExit
 
+from torba.loggly_handler import get_loggly_handler
 from lbry import __version__ as lbrynet_version
-from lbry.extras.daemon.loggly_handler import get_loggly_handler
 from lbry.conf import Config, CLIConfig
 from lbry.extras.daemon.Daemon import Daemon
+
+LOGGLY_TOKEN = 'BQEzZmMzLJHgAGxkBF00LGD0YGuyATVgAmqxAQEuAQZ2BQH4'
 
 log = logging.getLogger('lbry')
 log.addHandler(logging.NullHandler())
@@ -250,9 +252,7 @@ def setup_logging(args: argparse.Namespace, conf: Config, loop: asyncio.Abstract
             log.setLevel(logging.DEBUG)
 
     if conf.share_usage_data:
-        loggly_handler = get_loggly_handler()
-        loggly_handler.setLevel(logging.ERROR)
-        log.addHandler(loggly_handler)
+        log.addHandler(get_loggly_handler(f'lbrynet-{lbrynet_version}', LOGGLY_TOKEN))
 
 
 def run_daemon(args: argparse.Namespace, conf: Config):
