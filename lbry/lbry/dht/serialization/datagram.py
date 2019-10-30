@@ -7,8 +7,12 @@ REQUEST_TYPE = 0
 RESPONSE_TYPE = 1
 ERROR_TYPE = 2
 
+OPTIONAL_ARG_OFFSET = 100
+
 # bencode representation of argument keys
 PAGE_KEY = b'p'
+
+OPTIONAL_FIELDS = ()
 
 
 class KademliaDatagramBase:
@@ -43,11 +47,10 @@ class KademliaDatagramBase:
         datagram = {
             i: getattr(self, k) for i, k in enumerate(self.required_fields)
         }
-        if self.optional_fields:
-            for i, k in enumerate(self.optional_fields):
-                v = getattr(self, k, None)
-                if v is not None:
-                    datagram[i + len(self.required_fields)] = v
+        for i, k in enumerate(OPTIONAL_FIELDS):
+            v = getattr(self, k, None)
+            if v is not None:
+                datagram[i + OPTIONAL_ARG_OFFSET] = v
         return bencode(datagram)
 
 
@@ -161,10 +164,9 @@ def decode_datagram(datagram: bytes) -> typing.Union[RequestDatagram, ResponseDa
         for i, k in enumerate(datagram_class.required_fields)
         if i in primitive  # pylint: disable=unsupported-membership-test
     }
-    for i, k in enumerate(datagram_class.optional_fields):
-        index = i + len(datagram_class.required_fields)
-        if index in primitive:
-            decoded[index] = primitive[index]
+    for i, k in enumerate(OPTIONAL_FIELDS):
+        if i + OPTIONAL_ARG_OFFSET in primitive:
+            decoded[i + OPTIONAL_ARG_OFFSET] = primitive[i + OPTIONAL_ARG_OFFSET]
     return datagram_class(**decoded)
 
 
